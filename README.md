@@ -1,0 +1,2 @@
+# videcodes
+Vibe coding repsoitory
