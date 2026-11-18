@@ -1,5 +1,7 @@
 package com.lifehackd.studycrammer.ui.screens
 
+import androidx.compose.ui.platform.testTag
+import com.lifehackd.studycrammer.ui.TestTags
 import android.content.ClipboardManager
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
@@ -110,7 +112,7 @@ fun ApiKeySetupScreen(vm: SetupViewModel, onSaved: () -> Unit, onBack: (() -> Un
                 trailingIcon = {
                     TextButton(onClick = vm::toggleReveal) { Text(if (ui.reveal) "HIDE" else "SHOW") }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag(TestTags.API_KEY_FIELD),
                 shape = RoundedCornerShape(14.dp),
             )
 
@@ -125,7 +127,7 @@ fun ApiKeySetupScreen(vm: SetupViewModel, onSaved: () -> Unit, onBack: (() -> Un
                     onClick = vm::testAndSave,
                     enabled = ui.input.isNotBlank(),
                     loading = ui.testing,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.TEST_SAVE_BUTTON),
                 )
             }
 

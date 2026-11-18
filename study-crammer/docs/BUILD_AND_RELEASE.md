@@ -127,3 +127,31 @@ gradle -p tools/host-test/jvm-harness test        # Kotlin data layer, 21 tests 
 host tests, then a real Android build (`assembleDebug`, `testDebugUnitTest`, unsigned
 `assembleRelease` with R8 + `IG_ENFORCE`). APKs are uploaded as the `study-crammer-apks` artifact.
 Free and unlimited on public repos.
+
+## 9. Firebase Test Lab Robo test (optional, free on the Spark plan)
+
+The `robo-test` CI job installs the debug APK on a Google-hosted virtual phone, lets Firebase's
+robot crawl the UI for 5 minutes, and fails the build on any crash. You get a video, screenshots
+and logs. It is **skipped** until the repo is configured as below. Free quota: 10 virtual-device
+runs per day ([quotas](https://firebase.google.com/docs/test-lab/usage-quotas-pricing)).
+
+**One-time setup (about 10 minutes):**
+
+1. **Firebase project:** <https://console.firebase.google.com> → *Add project* (e.g. `study-crammer-ci`;
+   Analytics not needed). Note the **Project ID**. Spark (free) plan is enough.
+2. **Enable APIs** in Google Cloud Console for that project: *Cloud Testing API* and *Cloud Tool Results API*.
+3. **Service account:** Cloud Console → *IAM & Admin → Service Accounts → Create*
+   (`github-robo`), grant role **Editor** (simplest, on this test-only project) → *Keys → Add key → JSON*.
+4. **GitHub repo → Settings → Secrets and variables → Actions:**
+   - *Variables* tab → `FIREBASE_PROJECT_ID` = your Project ID
+   - *Secrets* tab → `FIREBASE_SA_KEY` = the entire JSON key file contents
+   - *(optional)* Secrets → `ROBO_GEMINI_KEY` = a **throwaway** Gemini key, so the robot gets past the
+     setup screen and exercises real Gemini calls. Without it, Robo only covers the setup screen.
+   - *(optional)* Variables → `FIREBASE_TEST_DEVICE` to change the phone
+     (default `model=MediumPhone.arm,version=34,…`; list options with `gcloud firebase test android models list`).
+5. Push any change under `study-crammer/` (or *Actions → Study Crammer CI → Run workflow*).
+   The job summary links to the Firebase results page.
+
+Security notes: delete the JSON key file from your computer after pasting it; keep the Firebase
+project separate from anything else (the key has Editor on it); the Gemini key used by Robo is
+visible to project owners in the Test Lab test details, so use a dedicated key with a low quota and rotate it freely.

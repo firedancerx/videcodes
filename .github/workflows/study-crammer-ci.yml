@@ -77,3 +77,57 @@ jobs:
           name: study-crammer-test-reports
           path: study-crammer/app/build/reports/
           if-no-files-found: ignore
+
+  robo-test:
+    name: Firebase Test Lab Robo crawl (debug APK)
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Skipped (not failed) until the Firebase project is configured — see docs/BUILD_AND_RELEASE.md §9.
+    # Fork PRs never get secrets, so they are skipped too.
+    if: >-
+      vars.FIREBASE_PROJECT_ID != '' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    env:
+      DEVICE: ${{ vars.FIREBASE_TEST_DEVICE || 'model=MediumPhone.arm,version=34,locale=en,orientation=portrait' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: study-crammer-apks
+          path: apks
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Run Robo test
+        working-directory: ${{ github.workspace }}
+        env:
+          ROBO_GEMINI_KEY: ${{ secrets.ROBO_GEMINI_KEY }}
+        run: |
+          set -o pipefail
+          APK=$(find apks -name 'app-debug.apk' | head -1)
+          test -n "$APK" || { echo "debug APK missing from artifact"; exit 1; }
+          # Sample notes (no commas: the directive list is comma-separated). >80 chars unlocks the stages.
+          NOTES="Mitochondria are the powerhouse of the cell. They make ATP through cellular respiration. Ribosomes build proteins and sit on the rough ER."
+          DIRECTIVES="text:notes_field=${NOTES}"
+          if [ -n "$ROBO_GEMINI_KEY" ]; then
+            # Optional THROWAWAY key so Robo gets past setup and exercises real Gemini calls.
+            DIRECTIVES="text:api_key_field=${ROBO_GEMINI_KEY},click:test_save_button=,${DIRECTIVES}"
+          fi
+          gcloud firebase test android run \
+            --project "${{ vars.FIREBASE_PROJECT_ID }}" \
+            --type robo \
+            --app "$APK" \
+            --device "$DEVICE" \
+            --timeout 5m \
+            --robo-directives "$DIRECTIVES" \
+            --client-details "matrixLabel=study-crammer ${{ github.sha }}" 2>&1 | tee robo.log
+      - name: Link results in job summary
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: |
+          URL=$(grep -oE 'https://console\.firebase\.google\.com/[^] ]+' robo.log 2>/dev/null | tail -1 || true)
+          {
+            echo "### Firebase Robo test"
+            if [ -n "$URL" ]; then echo "Results (video, screenshots, crash logs): $URL"; else echo "No results link found — see the job log."; fi
+          } >> "$GITHUB_STEP_SUMMARY"

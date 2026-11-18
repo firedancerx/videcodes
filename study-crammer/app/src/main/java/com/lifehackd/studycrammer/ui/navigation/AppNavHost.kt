@@ -1,5 +1,11 @@
 package com.lifehackd.studycrammer.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -43,14 +49,18 @@ private object Routes {
 }
 
 /** Gate: integrity first, then "has a key?", then the app. */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CrammerRoot(container: AppContainer) {
     val integrity by IntegrityGuard.state.collectAsStateWithLifecycle()
     val hasKey by container.vault.hasKey.collectAsStateWithLifecycle()
-    when {
-        integrity is IntegrityState.Failed -> IntegrityFailedScreen()
-        integrity == IntegrityState.Checking || hasKey == null -> SplashScreen()
-        else -> AppNavHost(container, startWithSetup = hasKey == false)
+    // Expose Compose testTags as Android resource IDs so Firebase Robo directives can target them.
+    Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+        when {
+            integrity is IntegrityState.Failed -> IntegrityFailedScreen()
+            integrity == IntegrityState.Checking || hasKey == null -> SplashScreen()
+            else -> AppNavHost(container, startWithSetup = hasKey == false)
+        }
     }
 }
 

@@ -1,5 +1,7 @@
 package com.lifehackd.studycrammer.ui.screens
 
+import androidx.compose.ui.platform.testTag
+import com.lifehackd.studycrammer.ui.TestTags
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -116,7 +118,8 @@ fun PanicRouterScreen(vm: PanicRouterViewModel, onOpenStage: (Stage) -> Unit, on
                     placeholder = { Text("Paste messy lecture notes, slides text, anything…") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 160.dp, max = 320.dp),
+                        .heightIn(min = 160.dp, max = 320.dp)
+                        .testTag(TestTags.NOTES_FIELD),
                     shape = RoundedCornerShape(14.dp),
                 )
                 Text(
