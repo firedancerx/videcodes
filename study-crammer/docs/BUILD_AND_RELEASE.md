@@ -120,3 +120,10 @@ dex / .so / cert hashes and failure bits. Debug builds compile the engine **with
 tools/host-test/run_host_tests.sh                 # native engine + Gradle checksum tool, 25 assertions
 gradle -p tools/host-test/jvm-harness test        # Kotlin data layer, 21 tests incl. SSE streaming
 ```
+
+## 8. Continuous integration
+
+`.github/workflows/study-crammer-ci.yml` runs on every PR/push touching `study-crammer/`:
+host tests, then a real Android build (`assembleDebug`, `testDebugUnitTest`, unsigned
+`assembleRelease` with R8 + `IG_ENFORCE`). APKs are uploaded as the `study-crammer-apks` artifact.
+Free and unlimited on public repos.

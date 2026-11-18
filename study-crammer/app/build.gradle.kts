@@ -17,6 +17,7 @@ val hasReleaseSigning = keystoreProps.getProperty("storeFile") != null
 android {
     namespace = "com.lifehackd.studycrammer"
     compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         applicationId = "com.lifehackd.studycrammer"
